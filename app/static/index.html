@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Подберите рецепт по продуктам, которые уже есть дома.">
+  <title>Что приготовить?</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Домашняя книга рецептов</p>
+      <h1>Что приготовить?</h1>
+      <p>Отметьте продукты, которые есть дома, и найдите подходящий рецепт.</p>
+    </div>
+    <a href="/docs">Документация API</a>
+  </header>
+  <main>
+    <p id="status" role="status" aria-live="polite"></p>
+    <div class="workspace">
+      <aside class="panel">
+        <h2>Мои продукты</h2>
+        <p class="hint">Общий справочник. Отметьте то, что есть в наличии.</p>
+        <form id="product-form">
+          <label for="product-name">Новый продукт</label>
+          <div class="input-row">
+            <input id="product-name" name="name" placeholder="Например, гречка" required>
+            <button type="submit">Добавить</button>
+          </div>
+        </form>
+        <form id="match-form">
+          <fieldset>
+            <legend>Есть дома</legend>
+            <div id="available-products" class="choices"></div>
+          </fieldset>
+          <button type="submit" class="primary wide">Подобрать рецепты</button>
+        </form>
+      </aside>
+      <div class="main-column">
+        <section class="panel" aria-labelledby="results-title">
+          <h2 id="results-title">Что можно приготовить</h2>
+          <div id="match-results" aria-live="polite">
+            <p class="hint">Выберите продукты и нажмите «Подобрать рецепты».</p>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="editor-title">
+          <h2 id="editor-title">Новый рецепт</h2>
+          <form id="recipe-form">
+            <label for="recipe-name">Название</label>
+            <input id="recipe-name" name="name" required>
+            <label for="recipe-instructions">Инструкция приготовления</label>
+            <textarea id="recipe-instructions" name="instructions" rows="4" required></textarea>
+            <fieldset>
+              <legend>Ингредиенты - выберите хотя бы один</legend>
+              <div id="recipe-products" class="choices compact"></div>
+            </fieldset>
+            <div class="actions">
+              <button type="submit" class="primary" id="save-recipe">Создать рецепт</button>
+              <button type="button" id="cancel-edit" hidden>Отменить редактирование</button>
+            </div>
+          </form>
+        </section>
+        <section class="panel" aria-labelledby="recipes-title">
+          <h2 id="recipes-title">Все рецепты</h2>
+          <div id="recipe-list"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer>Учебный проект · Исходный MVP · Этап 1</footer>
+</body>
+</html>
