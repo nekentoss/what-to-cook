@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_PATH: /app/data/recipes.db
+    volumes:
+      - recipe-data:/app/data
+
+volumes:
+  recipe-data:
