@@ -18,15 +18,16 @@ def test_create_and_read_recipe(client, products, recipe_payload):
     assert created["name"] == "Омлет"
     assert created["instructions"] == recipe_payload["instructions"]
     assert {item["id"] for item in created["ingredients"]} == set(recipe_payload["ingredient_ids"])
-    assert client.get(f'/api/recipes/{created["id"]}').json() == created
+    assert client.get(f"/api/recipes/{created['id']}").json() == created
     assert client.get("/api/recipes").json() == [created]
 
 
 def test_edit_and_delete_recipe_keep_products(client, products, recipe_payload):
     created = client.post("/api/recipes", json=recipe_payload).json()
-    path = f'/api/recipes/{created["id"]}'
+    path = f"/api/recipes/{created['id']}"
     updated = {
-        "name": "Омлет с сыром", "instructions": "Добавить сыр.",
+        "name": "Омлет с сыром",
+        "instructions": "Добавить сыр.",
         "ingredient_ids": [products[0]["id"], products[2]["id"]],
     }
     response = client.put(path, json=updated)
@@ -40,7 +41,9 @@ def test_edit_and_delete_recipe_keep_products(client, products, recipe_payload):
     assert response.content == b""
     assert client.get(path).status_code == 404
     assert client.get("/api/recipes").json() == []
-    assert {item["id"] for item in client.get("/api/products").json()} == {item["id"] for item in products}
+    assert {item["id"] for item in client.get("/api/products").json()} == {
+        item["id"] for item in products
+    }
 
 
 @pytest.mark.parametrize("method", ["GET", "PUT", "DELETE"])
@@ -51,14 +54,24 @@ def test_missing_recipe(client, recipe_payload, method):
     assert response.json()["detail"] == "Рецепт не найден."
 
 
-@pytest.mark.parametrize("changes", [
-    {"name": ""}, {"name": " \t\n "}, {"name": None},
-    {"instructions": ""}, {"instructions": "   "},
-    {"ingredient_ids": []}, {"ingredient_ids": [1, 1]},
-    {"ingredient_ids": [99999]}, {"ingredient_ids": [1, 99999]},
-    {"ingredient_ids": [-1]}, {"ingredient_ids": [True]},
-    {"ingredient_ids": [1.5]}, {"ingredient_ids": ["1"]},
-])
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"name": ""},
+        {"name": " \t\n "},
+        {"name": None},
+        {"instructions": ""},
+        {"instructions": "   "},
+        {"ingredient_ids": []},
+        {"ingredient_ids": [1, 1]},
+        {"ingredient_ids": [99999]},
+        {"ingredient_ids": [1, 99999]},
+        {"ingredient_ids": [-1]},
+        {"ingredient_ids": [True]},
+        {"ingredient_ids": [1.5]},
+        {"ingredient_ids": ["1"]},
+    ],
+)
 def test_reject_invalid_recipe(client, recipe_payload, changes):
     response = client.post("/api/recipes", json={**recipe_payload, **changes})
     assert response.status_code == 422
@@ -74,8 +87,10 @@ def test_required_fields(client):
 
 def test_invalid_update_does_not_change_recipe(client, recipe_payload):
     created = client.post("/api/recipes", json=recipe_payload).json()
-    path = f'/api/recipes/{created["id"]}'
-    response = client.put(path, json={**recipe_payload, "name": "Другое имя", "ingredient_ids": [99999]})
+    path = f"/api/recipes/{created['id']}"
+    response = client.put(
+        path, json={**recipe_payload, "name": "Другое имя", "ingredient_ids": [99999]}
+    )
     assert response.status_code == 422
     assert "99999" in response.json()["detail"]
     assert client.get(path).json() == created
@@ -115,7 +130,9 @@ def test_matching_api_and_duplicates(client, products, recipe_payload):
     assert result["percentage"] == 50.0
     assert result["available_ingredients"] == [products[0]]
     assert result["missing_ingredients"] == [products[1]]
-    full = client.post("/api/matches", json={"product_ids": recipe_payload["ingredient_ids"]}).json()
+    full = client.post(
+        "/api/matches", json={"product_ids": recipe_payload["ingredient_ids"]}
+    ).json()
     assert full[0]["percentage"] == 100.0
     assert full[0]["missing_ingredients"] == []
     assert client.post("/api/matches", json={"product_ids": [products[2]["id"]]}).json() == []
@@ -125,9 +142,14 @@ def test_matching_api_sort_order(client, products):
     ids = [product["id"] for product in products]
     created = []
     for name, ingredients in [("Я", ids[:2]), ("А", ids[:2]), ("А", ids[:2]), ("Я", ids[:1])]:
-        response = client.post("/api/recipes", json={
-            "name": name, "instructions": "Приготовить.", "ingredient_ids": ingredients,
-        })
+        response = client.post(
+            "/api/recipes",
+            json={
+                "name": name,
+                "instructions": "Приготовить.",
+                "ingredient_ids": ingredients,
+            },
+        )
         created.append(response.json()["id"])
     result = client.post("/api/matches", json={"product_ids": ids[:1]}).json()
     assert [recipe["id"] for recipe in result] == [created[3], created[1], created[2], created[0]]

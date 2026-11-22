@@ -14,7 +14,6 @@ from app.matching import match_recipes
 from app.models import Product, Recipe
 from app.schemas import MatchRead, MatchRequest, ProductCreate, ProductRead, RecipeRead, RecipeWrite
 
-
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
@@ -55,8 +54,10 @@ def create_app(database_path=None):
     @application.exception_handler(RequestValidationError)
     async def validation_error(request: Request, error: RequestValidationError):
         fields = {
-            "name": "Название", "instructions": "Инструкция",
-            "ingredient_ids": "Ингредиенты", "product_ids": "Имеющиеся продукты",
+            "name": "Название",
+            "instructions": "Инструкция",
+            "ingredient_ids": "Ингредиенты",
+            "product_ids": "Имеющиеся продукты",
         }
         messages = {
             "missing": "обязательное поле.",
@@ -86,7 +87,9 @@ def create_app(database_path=None):
     def list_products(session: Session = Depends(get_session)):
         return session.scalars(select(Product).order_by(Product.name, Product.id)).all()
 
-    @application.post("/api/products", response_model=ProductRead, status_code=201, tags=["Продукты"])
+    @application.post(
+        "/api/products", response_model=ProductRead, status_code=201, tags=["Продукты"]
+    )
     def add_product(data: ProductCreate, session: Session = Depends(get_session)):
         product = Product(name=data.name, normalized_name=data.name.casefold())
         session.add(product)
@@ -101,7 +104,9 @@ def create_app(database_path=None):
     @application.get("/api/recipes", response_model=list[RecipeRead], tags=["Рецепты"])
     def list_recipes(session: Session = Depends(get_session)):
         return session.scalars(
-            select(Recipe).options(selectinload(Recipe.ingredients)).order_by(Recipe.name, Recipe.id)
+            select(Recipe)
+            .options(selectinload(Recipe.ingredients))
+            .order_by(Recipe.name, Recipe.id)
         ).all()
 
     @application.get("/api/recipes/{recipe_id}", response_model=RecipeRead, tags=["Рецепты"])
@@ -111,7 +116,8 @@ def create_app(database_path=None):
     @application.post("/api/recipes", response_model=RecipeRead, status_code=201, tags=["Рецепты"])
     def add_recipe(data: RecipeWrite, session: Session = Depends(get_session)):
         recipe = Recipe(
-            name=data.name, instructions=data.instructions,
+            name=data.name,
+            instructions=data.instructions,
             ingredients=find_products(session, data.ingredient_ids),
         )
         session.add(recipe)

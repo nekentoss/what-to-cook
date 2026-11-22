@@ -4,6 +4,7 @@ import pytest
 @pytest.fixture
 def client(tmp_path):
     from fastapi.testclient import TestClient
+
     from app.main import create_app
 
     application = create_app(tmp_path / "test.db")

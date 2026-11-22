@@ -19,7 +19,9 @@ async function api(path, method = "GET", body) {
   }
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(typeof error.detail === "string" ? error.detail : "Не удалось выполнить запрос.");
+    throw new Error(
+      typeof error.detail === "string" ? error.detail : "Не удалось выполнить запрос.",
+    );
   }
   return response.status === 204 ? null : response.json();
 }
@@ -32,14 +34,18 @@ function element(tag, text, className) {
 }
 
 function checkedIds(container) {
-  return [...document.querySelectorAll(`${container} input:checked`)].map(input => Number(input.value));
+  return [...document.querySelectorAll(`${container} input:checked`)].map((input) =>
+    Number(input.value),
+  );
 }
 
 function renderChoices(containerId, selectedIds = []) {
   const container = document.querySelector(containerId);
   container.replaceChildren();
   if (!products.length) {
-    container.append(element("p", "Пока нет продуктов. Добавьте первый продукт в справочник.", "hint"));
+    container.append(
+      element("p", "Пока нет продуктов. Добавьте первый продукт в справочник.", "hint"),
+    );
   }
   for (const product of products) {
     const label = element("label");
@@ -53,9 +59,9 @@ function renderChoices(containerId, selectedIds = []) {
 }
 
 function clearMatches() {
-  document.querySelector("#match-results").replaceChildren(
-    element("p", "Выберите продукты и нажмите «Подобрать рецепты».", "hint")
-  );
+  document
+    .querySelector("#match-results")
+    .replaceChildren(element("p", "Выберите продукты и нажмите «Подобрать рецепты».", "hint"));
 }
 
 function recipeCard(recipe) {
@@ -83,7 +89,8 @@ function resetEditor() {
 function renderRecipes() {
   const container = document.querySelector("#recipe-list");
   container.replaceChildren();
-  if (!recipes.length) container.append(element("p", "Рецептов пока нет. Создайте первый рецепт.", "hint"));
+  if (!recipes.length)
+    container.append(element("p", "Рецептов пока нет. Создайте первый рецепт.", "hint"));
   for (const recipe of recipes) {
     const card = recipeCard(recipe);
     const actions = element("div", undefined, "actions");
@@ -93,7 +100,10 @@ function renderRecipes() {
       editingId = recipe.id;
       document.querySelector("#recipe-name").value = recipe.name;
       document.querySelector("#recipe-instructions").value = recipe.instructions;
-      renderChoices("#recipe-products", recipe.ingredients.map(item => item.id));
+      renderChoices(
+        "#recipe-products",
+        recipe.ingredients.map((item) => item.id),
+      );
       document.querySelector("#editor-title").textContent = "Редактирование рецепта";
       document.querySelector("#save-recipe").textContent = "Сохранить изменения";
       document.querySelector("#cancel-edit").hidden = false;
@@ -101,13 +111,15 @@ function renderRecipes() {
     });
     const remove = element("button", "Удалить", "danger");
     remove.type = "button";
-    remove.addEventListener("click", () => runAction(remove, async () => {
-      if (!window.confirm(`Удалить рецепт «${recipe.name}»?`)) return;
-      await api(`/api/recipes/${recipe.id}`, "DELETE");
-      if (editingId === recipe.id) resetEditor();
-      await loadRecipes();
-      clearMatches();
-    }));
+    remove.addEventListener("click", () =>
+      runAction(remove, async () => {
+        if (!window.confirm(`Удалить рецепт «${recipe.name}»?`)) return;
+        await api(`/api/recipes/${recipe.id}`, "DELETE");
+        if (editingId === recipe.id) resetEditor();
+        await loadRecipes();
+        clearMatches();
+      }),
+    );
     actions.append(edit, remove);
     card.append(actions);
     container.append(card);
@@ -131,7 +143,7 @@ async function runAction(button, action) {
   }
 }
 
-productForm.addEventListener("submit", event => {
+productForm.addEventListener("submit", (event) => {
   event.preventDefault();
   runAction(productForm.querySelector("button"), async () => {
     const available = checkedIds("#available-products");
@@ -144,7 +156,7 @@ productForm.addEventListener("submit", event => {
   });
 });
 
-recipeForm.addEventListener("submit", event => {
+recipeForm.addEventListener("submit", (event) => {
   event.preventDefault();
   runAction(document.querySelector("#save-recipe"), async () => {
     const body = {
@@ -152,27 +164,46 @@ recipeForm.addEventListener("submit", event => {
       instructions: document.querySelector("#recipe-instructions").value,
       ingredient_ids: checkedIds("#recipe-products"),
     };
-    await api(editingId === null ? "/api/recipes" : `/api/recipes/${editingId}`,
-      editingId === null ? "POST" : "PUT", body);
+    await api(
+      editingId === null ? "/api/recipes" : `/api/recipes/${editingId}`,
+      editingId === null ? "POST" : "PUT",
+      body,
+    );
     resetEditor();
     await loadRecipes();
     clearMatches();
   });
 });
 
-matchForm.addEventListener("submit", event => {
+matchForm.addEventListener("submit", (event) => {
   event.preventDefault();
   runAction(matchForm.querySelector("button"), async () => {
-    const results = await api("/api/matches", "POST", { product_ids: checkedIds("#available-products") });
+    const results = await api("/api/matches", "POST", {
+      product_ids: checkedIds("#available-products"),
+    });
     const container = document.querySelector("#match-results");
     container.replaceChildren();
-    if (!results.length) container.append(element("p", "Подходящих рецептов нет. Попробуйте выбрать другие продукты.", "hint"));
+    if (!results.length)
+      container.append(
+        element("p", "Подходящих рецептов нет. Попробуйте выбрать другие продукты.", "hint"),
+      );
     for (const result of results) {
       const card = recipeCard(result);
-      const percentage = result.percentage.toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const percentage = result.percentage.toLocaleString("ru-RU", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      });
       card.prepend(element("p", `Совпадение: ${percentage}%`, "percentage"));
-      card.append(element("p", "Есть: " + result.available_ingredients.map(item => item.name).join(", ")));
-      card.append(element("p", "Не хватает: " + (result.missing_ingredients.map(item => item.name).join(", ") || "всё есть")));
+      card.append(
+        element("p", "Есть: " + result.available_ingredients.map((item) => item.name).join(", ")),
+      );
+      card.append(
+        element(
+          "p",
+          "Не хватает: " +
+            (result.missing_ingredients.map((item) => item.name).join(", ") || "всё есть"),
+        ),
+      );
       container.append(card);
     }
   });
