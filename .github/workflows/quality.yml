@@ -1,0 +1,37 @@
+name: Проверка качества
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Установка зависимостей
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          npm ci
+      - name: Линтеры и форматирование
+        run: pre-commit run --all-files --show-diff-on-failure
+      - name: Покрытие алгоритма подбора
+        run: python -m pytest tests/test_matching.py --cov=app.matching --cov-fail-under=60
+      - name: Тесты и отчёт о покрытии
+        run: python -m pytest --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.xml
+          if-no-files-found: error

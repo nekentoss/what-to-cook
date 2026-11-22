@@ -1,0 +1,10 @@
+{
+  "name": "what-to-cook",
+  "private": true,
+  "scripts": {
+    "check:js": "biome check app/static/app.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.6"
+  }
+}
