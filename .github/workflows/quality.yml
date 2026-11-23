@@ -30,6 +30,8 @@ jobs:
         run: python -m pytest tests/test_matching.py --cov=app.matching --cov-fail-under=60
       - name: Тесты и отчёт о покрытии
         run: python -m pytest --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml
+      - name: Проверка интерфейса в Chrome
+        run: npm run test:ui
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
