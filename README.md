@@ -35,11 +35,15 @@ python -m pytest tests/test_matching.py --cov=app.matching --cov-fail-under=60
 python -m pytest --cov=app --cov-report=term-missing
 ```
 
-Ruff проверяет и форматирует Python, Biome — JavaScript. GitHub Actions запускает проверки при push и для Pull Request. XML-отчёт о покрытии сохраняется в артефакте `coverage`. [Запуски CI](https://github.com/nekentoss/what-to-cook/actions/workflows/quality.yml)
+Ruff проверяет и форматирует Python, Biome — JavaScript. GitHub Actions запускает проверки при push и для Pull Request. XML-отчёт о покрытии сохраняется в артефакте `coverage`. [Успешная проверка](https://github.com/nekentoss/what-to-cook/actions/runs/45100903792) · [Падение линтера в PR № 4](https://github.com/nekentoss/what-to-cook/actions/runs/45006356940)
 
 ## Материалы проекта
 
 - [Ревью исходного MVP](REVIEW.md) и [бэклог](TODO.md)
-- [Метрики до рефакторинга](ANALYSIS.md)
+- [Метрики до рефакторинга](ANALYSIS.md) и [результаты после](REFACTORING.md)
+- [Презентация к защите, 4 слайда](docs/defense.pdf)
+- [Лог успешной проверки](docs/ci.txt)
 
-Ветка `mvp` хранит исходный код от AI. Изменения попадают в `main` через Pull Request.
+Для проверки интерфейса нужен Google Chrome. Из активированного окружения запустите `npm run test:ui`. Тесты используют отдельную временную базу.
+
+Ветка `mvp` хранит исходный код от AI. Изменения попадают в `main` через Pull Request с обязательной проверкой `Quality Gate`.
