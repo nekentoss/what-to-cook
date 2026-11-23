@@ -1,0 +1,10 @@
+GitHub Actions · Quality Gate
+https://github.com/nekentoss/what-to-cook/actions/runs/45100903792
+
+2026-11-23T02:34:19.5066239Z Ruff lint................................................................Passed
+2026-11-23T02:34:19.5378966Z Ruff format..............................................................Passed
+2026-11-23T02:34:19.6219623Z Biome....................................................................Passed
+2026-11-23T02:34:20.2505141Z Required test coverage of 60% reached. Total coverage: 100.00%
+2026-11-23T02:34:23.9548659Z Coverage XML written to file coverage.xml
+2026-11-23T02:34:23.9548949Z 46 passed in 3.13s
+2026-11-23T02:34:43.7488959Z   5 passed (18.4s)
