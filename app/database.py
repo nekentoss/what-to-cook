@@ -6,7 +6,6 @@ from sqlalchemy import create_engine, event
 
 from app.models import Base
 
-
 DEFAULT_DATABASE_PATH = Path(__file__).resolve().parent.parent / "data" / "recipes.db"
 
 

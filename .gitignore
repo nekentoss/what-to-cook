@@ -17,4 +17,6 @@ data/
 .agents/
 .aws/
 *.log
-
+node_modules/
+.ruff_cache/
+coverage.xml

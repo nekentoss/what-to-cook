@@ -10,3 +10,5 @@ pygments==2.21.0
 pytest==8.4.2
 pytest-cov==7.1.0
 tomli==2.5.0
+pre-commit==4.2.0
+ruff==0.14.6

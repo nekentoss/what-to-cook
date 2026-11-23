@@ -38,8 +38,10 @@ def test_repeated_selected_products_do_not_increase_percentage():
 
 def test_sort_by_percentage_then_name_then_id():
     recipes = [
-        recipe(5, "Яичница", [1]), recipe(3, "Блины", [1, 2]),
-        recipe(2, "Блины", [1, 2]), recipe(1, "Омлет", [1, 2]),
+        recipe(5, "Яичница", [1]),
+        recipe(3, "Блины", [1, 2]),
+        recipe(2, "Блины", [1, 2]),
+        recipe(1, "Омлет", [1, 2]),
         recipe(4, "Салат", [2]),
     ]
     assert [item["id"] for item in match_recipes(recipes, [1])] == [5, 2, 3, 1]

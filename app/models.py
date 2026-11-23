@@ -1,7 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Table, Text
 from sqlalchemy.orm import declarative_base, relationship
 
-
 Base = declarative_base()
 
 recipe_ingredients = Table(

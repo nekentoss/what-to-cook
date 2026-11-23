@@ -6,10 +6,14 @@ def test_seed_is_repeatable_and_preserves_user_data(client):
 
     milk = client.post("/api/products", json={"name": " молоко "}).json()
     avocado = client.post("/api/products", json={"name": "Авокадо"}).json()
-    original = client.post("/api/recipes", json={
-        "name": "Омлет", "instructions": "Мой собственный рецепт.",
-        "ingredient_ids": [milk["id"], avocado["id"]],
-    }).json()
+    original = client.post(
+        "/api/recipes",
+        json={
+            "name": "Омлет",
+            "instructions": "Мой собственный рецепт.",
+            "ingredient_ids": [milk["id"], avocado["id"]],
+        },
+    ).json()
     engine = client.app.state.engine
     assert seed_database(engine) == (14, 5)
     assert len(client.get("/api/products").json()) == 16
@@ -17,7 +21,7 @@ def test_seed_is_repeatable_and_preserves_user_data(client):
     before = (client.get("/api/products").json(), client.get("/api/recipes").json())
     assert seed_database(engine) == (0, 0)
     assert before == (client.get("/api/products").json(), client.get("/api/recipes").json())
-    assert client.get(f'/api/recipes/{original["id"]}').json() == original
+    assert client.get(f"/api/recipes/{original['id']}").json() == original
 
 
 def test_seed_empty_database(client):
@@ -30,6 +34,7 @@ def test_seed_empty_database(client):
 def test_sqlite_enforces_foreign_keys(client):
     from sqlalchemy import insert, text
     from sqlalchemy.exc import IntegrityError
+
     from app.models import recipe_ingredients
 
     with client.app.state.engine.connect() as connection:

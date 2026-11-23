@@ -2,7 +2,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 ProductId = Annotated[int, Field(strict=True, gt=0)]
 
 
