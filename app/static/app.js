@@ -5,6 +5,7 @@ const matchForm = document.querySelector("#match-form");
 let products = [];
 let recipes = [];
 let editingId = null;
+let matchVersion = 0;
 
 async function api(path, method = "GET", body) {
   let response;
@@ -18,9 +19,11 @@ async function api(path, method = "GET", body) {
     throw new Error("Не удалось связаться с сервером. Проверьте, что приложение запущено.");
   }
   if (!response.ok) {
-    const error = await response.json();
+    const detail = (await response.json().catch(() => null))?.detail;
     throw new Error(
-      typeof error.detail === "string" ? error.detail : "Не удалось выполнить запрос.",
+      typeof detail === "string"
+        ? detail
+        : `Не удалось выполнить запрос (HTTP ${response.status}).`,
     );
   }
   return response.status === 204 ? null : response.json();
@@ -59,6 +62,7 @@ function renderChoices(containerId, selectedIds = []) {
 }
 
 function clearMatches() {
+  matchVersion += 1;
   document
     .querySelector("#match-results")
     .replaceChildren(element("p", "Выберите продукты и нажмите «Подобрать рецепты».", "hint"));
@@ -143,16 +147,25 @@ async function runAction(button, action) {
   }
 }
 
+async function refreshAddedProduct() {
+  try {
+    products = await api("/api/products");
+    renderChoices("#available-products", checkedIds("#available-products"));
+    renderChoices("#recipe-products", checkedIds("#recipe-products"));
+  } catch {
+    const retry = element("button", "Обновить список");
+    retry.type = "button";
+    retry.addEventListener("click", () => runAction(retry, refreshAddedProduct));
+    statusMessage.replaceChildren("Продукт добавлен. ", retry);
+  }
+}
+
 productForm.addEventListener("submit", (event) => {
   event.preventDefault();
   runAction(productForm.querySelector("button"), async () => {
-    const available = checkedIds("#available-products");
-    const ingredients = checkedIds("#recipe-products");
     await api("/api/products", "POST", { name: document.querySelector("#product-name").value });
-    products = await api("/api/products");
     productForm.reset();
-    renderChoices("#available-products", available);
-    renderChoices("#recipe-products", ingredients);
+    await refreshAddedProduct();
   });
 });
 
@@ -164,23 +177,33 @@ recipeForm.addEventListener("submit", (event) => {
       instructions: document.querySelector("#recipe-instructions").value,
       ingredient_ids: checkedIds("#recipe-products"),
     };
-    await api(
-      editingId === null ? "/api/recipes" : `/api/recipes/${editingId}`,
-      editingId === null ? "POST" : "PUT",
-      body,
-    );
-    resetEditor();
-    await loadRecipes();
-    clearMatches();
+    const list = document.querySelector("#recipe-list");
+    recipeForm.inert = true;
+    list.inert = true;
+    try {
+      await api(
+        editingId === null ? "/api/recipes" : `/api/recipes/${editingId}`,
+        editingId === null ? "POST" : "PUT",
+        body,
+      );
+      resetEditor();
+      await loadRecipes();
+      clearMatches();
+    } finally {
+      recipeForm.inert = false;
+      list.inert = false;
+    }
   });
 });
 
 matchForm.addEventListener("submit", (event) => {
   event.preventDefault();
   runAction(matchForm.querySelector("button"), async () => {
+    const version = ++matchVersion;
     const results = await api("/api/matches", "POST", {
       product_ids: checkedIds("#available-products"),
     });
+    if (version !== matchVersion) return;
     const container = document.querySelector("#match-results");
     container.replaceChildren();
     if (!results.length)
@@ -200,8 +223,9 @@ matchForm.addEventListener("submit", (event) => {
       card.append(
         element(
           "p",
-          "Не хватает: " +
-            (result.missing_ingredients.map((item) => item.name).join(", ") || "всё есть"),
+          result.missing_ingredients.length
+            ? `Не хватает: ${result.missing_ingredients.map((item) => item.name).join(", ")}`
+            : "Все ингредиенты есть",
         ),
       );
       container.append(card);

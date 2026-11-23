@@ -52,3 +52,7 @@ class MatchRead(RecipeRead):
     percentage: float
     available_ingredients: list[ProductRead]
     missing_ingredients: list[ProductRead]
+
+
+class ErrorResponse(BaseModel):
+    detail: str

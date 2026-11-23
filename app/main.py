@@ -12,7 +12,15 @@ from sqlalchemy.orm import Session, selectinload, sessionmaker
 from app.database import get_session, init_database, make_engine
 from app.matching import match_recipes
 from app.models import Product, Recipe
-from app.schemas import MatchRead, MatchRequest, ProductCreate, ProductRead, RecipeRead, RecipeWrite
+from app.schemas import (
+    ErrorResponse,
+    MatchRead,
+    MatchRequest,
+    ProductCreate,
+    ProductRead,
+    RecipeRead,
+    RecipeWrite,
+)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -79,6 +87,8 @@ def create_app(database_path=None):
             details.append(field + ": " + message)
         return JSONResponse(status_code=422, content={"detail": " ".join(details)})
 
+    validation_responses = {422: {"model": ErrorResponse}}
+
     @application.get("/", include_in_schema=False)
     def index():
         return FileResponse(STATIC_DIR / "index.html")
@@ -88,7 +98,11 @@ def create_app(database_path=None):
         return session.scalars(select(Product).order_by(Product.name, Product.id)).all()
 
     @application.post(
-        "/api/products", response_model=ProductRead, status_code=201, tags=["Продукты"]
+        "/api/products",
+        responses=validation_responses,
+        response_model=ProductRead,
+        status_code=201,
+        tags=["Продукты"],
     )
     def add_product(data: ProductCreate, session: Session = Depends(get_session)):
         product = Product(name=data.name, normalized_name=data.name.casefold())
@@ -109,11 +123,22 @@ def create_app(database_path=None):
             .order_by(Recipe.name, Recipe.id)
         ).all()
 
-    @application.get("/api/recipes/{recipe_id}", response_model=RecipeRead, tags=["Рецепты"])
+    @application.get(
+        "/api/recipes/{recipe_id}",
+        responses=validation_responses,
+        response_model=RecipeRead,
+        tags=["Рецепты"],
+    )
     def get_recipe(recipe_id: int, session: Session = Depends(get_session)):
         return find_recipe(session, recipe_id)
 
-    @application.post("/api/recipes", response_model=RecipeRead, status_code=201, tags=["Рецепты"])
+    @application.post(
+        "/api/recipes",
+        responses=validation_responses,
+        response_model=RecipeRead,
+        status_code=201,
+        tags=["Рецепты"],
+    )
     def add_recipe(data: RecipeWrite, session: Session = Depends(get_session)):
         recipe = Recipe(
             name=data.name,
@@ -125,7 +150,12 @@ def create_app(database_path=None):
         session.refresh(recipe)
         return recipe
 
-    @application.put("/api/recipes/{recipe_id}", response_model=RecipeRead, tags=["Рецепты"])
+    @application.put(
+        "/api/recipes/{recipe_id}",
+        responses=validation_responses,
+        response_model=RecipeRead,
+        tags=["Рецепты"],
+    )
     def edit_recipe(recipe_id: int, data: RecipeWrite, session: Session = Depends(get_session)):
         recipe = find_recipe(session, recipe_id)
         products = find_products(session, data.ingredient_ids)
@@ -136,16 +166,30 @@ def create_app(database_path=None):
         session.refresh(recipe)
         return recipe
 
-    @application.delete("/api/recipes/{recipe_id}", status_code=204, tags=["Рецепты"])
+    @application.delete(
+        "/api/recipes/{recipe_id}",
+        responses=validation_responses,
+        status_code=204,
+        tags=["Рецепты"],
+    )
     def delete_recipe(recipe_id: int, session: Session = Depends(get_session)):
         session.delete(find_recipe(session, recipe_id))
         session.commit()
         return Response(status_code=204)
 
-    @application.post("/api/matches", response_model=list[MatchRead], tags=["Подбор"])
+    @application.post(
+        "/api/matches",
+        responses=validation_responses,
+        response_model=list[MatchRead],
+        tags=["Подбор"],
+    )
     def get_matches(data: MatchRequest, session: Session = Depends(get_session)):
         find_products(session, data.product_ids)
-        recipes = session.scalars(select(Recipe).options(selectinload(Recipe.ingredients))).all()
+        recipes = session.scalars(
+            select(Recipe)
+            .where(Recipe.ingredients.any(Product.id.in_(set(data.product_ids))))
+            .options(selectinload(Recipe.ingredients))
+        ).all()
         return match_recipes(
             [RecipeRead.model_validate(recipe).model_dump() for recipe in recipes], data.product_ids
         )
