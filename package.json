@@ -2,9 +2,11 @@
   "name": "what-to-cook",
   "private": true,
   "scripts": {
-    "check:js": "biome check app/static/app.js"
+    "check:js": "biome check app/static/app.js",
+    "test:ui": "playwright test"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.6"
+    "@biomejs/biome": "2.3.6",
+    "@playwright/test": "1.56.1"
   }
 }

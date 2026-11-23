@@ -20,3 +20,4 @@ data/
 node_modules/
 .ruff_cache/
 coverage.xml
+test-results/
